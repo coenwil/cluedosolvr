@@ -52,7 +52,7 @@ printEvidence <- function(state, player.name) {
   }
   printSection(characters, "Characters")
   printSection(weapons, "Weapons")
-  printsection(rooms, "Rooms")
+  printSection(rooms, "Rooms")
 }
 
 # print full suggestion/accusation history
