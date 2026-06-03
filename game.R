@@ -1,11 +1,11 @@
 # file containing the functions to initialize a cluedo game in R
 
 # lists of cards
-characters <- c("scarlett", "mustard", "white", "green", "peacock", "plum")
+characters <- c("Miss Scarlett", "Col. Mustard", "Mrs. White", "Reverend Green", "Mrs. Peacock", "Prof. Plum")
 weapons <- c("candlestick", "dagger", "pipe", "revolver", "rope", "wrench")
 
-rooms <- c("hall", "lounge", "dining", "kitchen", "ballroom", "conservatory",
-           "billiard", "library", "study")
+rooms <- c("hall", "lounge", "dining room", "kitchen", "ballroom", "conservatory",
+           "billiard room", "library", "study")
 
 all_cards <- c(characters, weapons, rooms)
 
@@ -61,7 +61,7 @@ createGame <- function(player.names) {
   names(players) <- player.names
   
   # return game state
-  list(
+  state <- list(
     players = players,
     envelope = envelope,
     # integer index for whose turn it is (player number)
@@ -74,4 +74,10 @@ createGame <- function(player.names) {
     # log of all suggestion/accusations
     history = list()
   )
+  
+  # use state to create prior knowledge matrices for each player
+  for (name in player.names) {
+    state$players[[name]]$prior <- priorMatrix(state, name)
+  }
+  state
 }
