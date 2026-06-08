@@ -13,6 +13,8 @@ priorMatrix <- function(state, solver.name) {
   hand <- state$players[[solver.name]]$hand
   # all cards that the solver has in their hand get probability 1
   mat[hand, solver.name] <- 1
+  # all cards that the solver does not have in their hand get probability 0
+  mat[setdiff(all_cards, hand), solver.name] <- 0
   # all cards that the solver has in their hand get probability 0 for the other players
   mat[hand, solver.name != col.names] <- 0
   
@@ -20,13 +22,11 @@ priorMatrix <- function(state, solver.name) {
   for (category in list(characters, weapons, rooms)) {
     unknown <- setdiff(category, hand)
     mat[unknown, "envelope"] <- 1 / length(unknown)
-    # do the same for the cards in each opponents hand 
-    mat[unknown, player.names != solver.name] <- 1 / length(unknown) 
+    # do the same for the cards in each opponents hand
+    # more complicated here since envelope is constrained to have 1 card of each category, but players can have multiple
+    # so the equation for uniform probabilities over the players but allowing them to have multiple is 
+    # (1 / nr of players - 1 to account for each player knowing their own hand) * ((nr of unknown cards - 1 thats in the envelope) / (total number of unknown cards))
+    mat[unknown, !colnames(mat) %in% c("envelope", solver.name)] <- (1 / (length(player.names) - 1)) * ((length(unknown) - 1) / length(unknown))
     }
   mat
 }
-
-game <- createGame(c("Alice", "Bob", "Charlie", "Carol", "Ed"))
-priorMatrix(game, "Bob")
-testmat <- matrix(letters[1:25], nrow = 5)
-testmat[1,1]
