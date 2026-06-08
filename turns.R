@@ -116,6 +116,11 @@ makeSuggestion <- function(state, suspect, weapon, room) {
   )
   state$history <- append(state$history, list(event))
   
+  # update priors for all players based on the suggestion event
+  for (name in names(state$players)) {
+    state <- updatePrior(state, event, solver.name = name, opponents)
+  }
+  
   # next turn
   state <- advanceTurn(state)
   state
