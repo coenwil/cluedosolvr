@@ -87,6 +87,21 @@ updatePrior <- function(state, event, solver.name, opponents) {
       }
     }
   }
+  
+  # check if now there is a card certainly in the envelope from a category, if yes make all others 0
+  for (category in list(characters, weapons, rooms)) {
+    envelope.probs <- prior[category, "envelope"]
+    
+    # use .999 to avoid floating point arithmetic bugs
+    if (any(envelope.probs > .999)) {
+      known <- category[envelope.probs == 1]
+      print(known)
+      # the unknown cards in the category get 0
+      print(prior[category, "envelope"])
+      prior[setdiff(category, known), "envelope"] <- 0
+      print(prior[category, "envelope"])
+    }
+  }
   # update the prior with the posterior probabilities, will be the prior for the next event
   state$players[[solver.name]]$prior <- prior
   state
