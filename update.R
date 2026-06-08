@@ -67,13 +67,23 @@ updatePrior <- function(state, event, solver.name, opponents) {
           (prob.card * prob.others[1]) - (prob.card * prob.others[2]) - (prob.others[1] * prob.others[2]) +
           (prob.card * prob.others[1] * prob.others[2])
         
-        # computing bayes factors from the likelihoods
+        # computing bayes factors from the likelihoods for the envelope column
         bf <- lh.in / lh.out
         prior.odds <- prob.envelope / (1 - prob.envelope)
         posterior.odds <- bf * prior.odds
         
         # normalize back to posterior probability for evidence matrix
         prior[card, "envelope"] <- posterior.odds / (1 + posterior.odds)
+        
+        # updating column of refuter
+        prob.refuter <- prior[card, event$refuter]
+        # skip if current card is already known anyway
+        if (prob.refuter == 0) next
+        bf.refuter <- 1 / lh.in
+        prior.odds.refuter <- prob.refuter / (1 - prob.refuter)
+        # posterior odds
+        posterior.odds.refuter <- bf.refuter * prior.odds.refuter
+        prior[card, event$refuter] <- posterior.odds.refuter / (1 + posterior.odds.refuter)
       }
     }
   }
