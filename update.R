@@ -17,7 +17,7 @@ updatePrior <- function(state, event, solver.name, opponents) {
   for (opponent in opponents) {
     # if somebody becomes a refuter, break the loop and go to refutation loop below
     # next players do not get considered
-    if (opponent == event$refuter) break
+    if (!is.null(event$refuter) && opponent == event$refuter) break
     for (card in suggestion) {
       prior[card, opponent] <- 0
     }
@@ -40,8 +40,8 @@ updatePrior <- function(state, event, solver.name, opponents) {
     if (solver.name == event$player) {
       # then you know for sure which card the refuter has in their hand
       prior[event$card.shown, event$refuter] <- 1
-      # and so it cannot be in the envelope
-      prior[event$card.shown, "envelope"] <- 0
+      # and so it cannot be in the envelope or in the other player's hands
+      prior[event$card.shown, setdiff(colnames(prior), event$refuter)] <- 0
     } else {
       # if the solver can only observe the suggestion, they do not see the card
       # check if you already know that a suggested card cannot be in the envelope
