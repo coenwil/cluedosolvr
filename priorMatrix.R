@@ -20,7 +20,9 @@ priorMatrix <- function(state, solver.name) {
   for (category in list(characters, weapons, rooms)) {
     unknown <- setdiff(category, hand)
     mat[unknown, "envelope"] <- 1 / length(unknown)
-  }
+    # do the same for the cards in each opponents hand 
+    mat[unknown, player.names != solver.name] <- 1 / length(unknown) 
+    }
   mat
 }
 
