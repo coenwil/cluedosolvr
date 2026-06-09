@@ -4,9 +4,33 @@ updatePrior <- function(state, event, solver.name, opponents) {
   # event is passed by makeSuggestion which calls this function
   # opponents is also defined by makeSuggestion
   
-  # do nothing if the type of event is not a suggestion
-  # only suggestions carry potential (non)refutation information
-  if (event$type != "suggestion") return(state)
+  # handle accusations
+  # do nothing if correct, because the game is then over
+  if (event$type == "accusation") {
+    prior <- state$players[[solver.name]]$prior
+    
+    # if incorrect, update probabilities of cards being in envelope
+    if (!event$correct) {
+    suggestion <- c(event$suspect, event$weapon, event$room)
+    
+    for (card in accusation) {
+      prob.envelope <- prior(card, "envelope")
+      # skip if probability already 0
+      if (prob.envelope == 0) next
+      other.cards <- setdiff(accusation, card)
+      bf <- 1 - (prior[other.cards[1], "envelope"] * prior[other.cards[2], "envelope"])
+      # convert prior probability to odds for multiplication
+      prior.odds <- prob.envelope / (1 - prob.envelope)
+      posterior.odds <- bf * prior.odds
+      # and back to probability for matrix
+      prior[card, "envelope"] <- posterior.odds / (posterior.odds + 1)
+    }
+    # assign updated matrix to prior matrix
+    state$players[[solver.name]]$prior <- prior  
+    }
+  # exit function
+  return(state)
+  }
   
   suggestion <- c(event$suspect, event$weapon, event$room)
   # current player's prior matrix
@@ -97,9 +121,7 @@ updatePrior <- function(state, event, solver.name, opponents) {
       known <- category[envelope.probs == 1]
       print(known)
       # the unknown cards in the category get 0
-      print(prior[category, "envelope"])
       prior[setdiff(category, known), "envelope"] <- 0
-      print(prior[category, "envelope"])
     }
   }
   # update the prior with the posterior probabilities, will be the prior for the next event
