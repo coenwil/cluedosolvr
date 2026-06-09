@@ -48,7 +48,18 @@ updatePrior <- function(state, event, solver.name, opponents) {
   }
   
   # if no one refuted, suggested cards must be in envelope
+  # and everybody knows this
   if (is.null(event$refuter)) {
+    solution <- c(event$suspect, event$weapon, event$room)
+    for (name in names(state$players)) {
+      prior <- state$players[[name]]$prior
+      # make all probabilities of being in the envelope 0
+      prior[, "envelope"] <- 0
+      # and overwrite with ones for the solution set
+      prior[solution, "envelope"] <- 1
+      state$players[[name]]$prior <- prior
+    }
+    
     for (card in suggestion) {
       player.probs <- prior[card, names(state$players)]
       # check if the previous loop set all player probabilities to 0
