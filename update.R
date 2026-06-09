@@ -119,7 +119,6 @@ updatePrior <- function(state, event, solver.name, opponents) {
     # use .999 to avoid floating point arithmetic bugs
     if (any(envelope.probs > .999)) {
       known <- category[envelope.probs == 1]
-      print(known)
       # the unknown cards in the category get 0
       prior[setdiff(category, known), "envelope"] <- 0
     }
