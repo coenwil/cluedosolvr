@@ -73,6 +73,9 @@ makeSuggestion <- function(state, suspect, weapon, room) {
   # remove players who have been eliminated
   opponents <- opponents[!sapply(opponents, function(i) state$players[[i]]$eliminated)]
   
+  # initialize a vector of nonrefuters for later use
+  non.refuters <- c()
+  
   # round of refusing
   for (opponent in opponents) {
     matching <-  intersect(state$players[[opponent]]$hand, suggestion)
@@ -88,6 +91,7 @@ makeSuggestion <- function(state, suspect, weapon, room) {
       break
     } else { 
       cat(sprintf(" %s cannot refute.\n", opponent)) 
+      non.refuters <- append(non.refuters, opponent)
     }
     
   }
@@ -112,6 +116,7 @@ makeSuggestion <- function(state, suspect, weapon, room) {
     weapon = weapon,
     room = room,
     refuter = refuter,
+    non.refuters = non.refuters,
     card.shown = card.shown
   )
   state$history <- append(state$history, list(event))
