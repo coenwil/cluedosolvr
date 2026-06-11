@@ -76,9 +76,9 @@ gibbs <- function(state, solver.name, n.iter = 1000, burn = 200) {
   samp.w <- sample(weapons, 1, prob = prior[weapons, "envelope"])
   samp.r <- sample(rooms, 1, prob = prior[rooms, "envelope"])
   
-  # creating an outcome vector of lists of most likely solution sets
+  # creating an outcome vector of lists of sampled solution sets
   samples <- vector("list", n.iter) 
-  # keeping track of log likelihood for "trace plot"
+  # keeping track of log likelihood for trace plot of likelihoods
   trace.ll <- numeric(n.iter)
   
   # gibbs sampling loop
@@ -116,9 +116,7 @@ gibbs <- function(state, solver.name, n.iter = 1000, burn = 200) {
     
     # one sample of a full solution set goes into the outcome vector
     # named vector was sometimes causing problems in case of nonrefutation
-    samples[[h]] <- c(suspect = unname(samp.s),
-                      weapon = unname(samp.w),
-                      room = unname(samp.r))
+    samples[[h]] <- c(samp.s, samp.w, samp.r)
     # compute log likelihood of current sample
     trace.ll[[h]] <- logLH(c(samp.s, samp.w, samp.r))
   }
