@@ -8,10 +8,13 @@ computeLH <- function(event, envelope, prior) {
   
   # cards in the suggestion that are not in the envelope
   C <- setdiff(data, envelope)
+  print(C)
   
   if (event$type == "accusation") {
     # would the accusation have been wrong given the simulated envelope?
     wrong <- !all(data == envelope)
+    
+    print("ACCUSATION")
     
     # if yes, the likelihood of observing a wrong accusation is 1, else 0
     return(as.numeric(wrong))
@@ -20,6 +23,7 @@ computeLH <- function(event, envelope, prior) {
   # if there was no refutation
   # can only happen if none of the players hold any card in the suggestion set
   if (is.null(event$refuter)) {
+    print("NONREFUTATION")
     # if the observed suggestion set is exactly the simulated set, 
     # the likelihood of nonrefutation is 1
     if (length(C) == 0) return(1)
@@ -39,6 +43,7 @@ computeLH <- function(event, envelope, prior) {
     return(lh)
     # if there was a refuter in the observed data
   } else {
+    print("REFUTATION")
     # if the observed suggestion set is exactly the simulated set, 
     # the likelihood of refutation is 0
     if (length(C) == 0) return(0)
@@ -99,7 +104,7 @@ gibbs <- function(state, solver.name, n.iter = 1000, burn = 200) {
     cond.envelope <- c(samp.s, samp.r)
     log.condpost <- sapply(weapons, function(w) {
       envelope <- c(samp.s, w, samp.r)
-      logLH(envelope) + log(prior[s, "envelope"])
+      logLH(envelope) + log(prior[w, "envelope"])
     })
     # sample new weapon for next iteration
     samp.w <- sample(weapons, 1, prob = exp(log.condpost))
@@ -114,7 +119,7 @@ gibbs <- function(state, solver.name, n.iter = 1000, burn = 200) {
     samp.r <- sample(rooms, 1, prob = exp(log.condpost))
     
     # one sample of a full solution set goes into the outcome vector
-    samples[[t]] <- c(samp.s, samp.w, samp.r)
+    samples[[h]] <- c(samp.s, samp.w, samp.r)
   }
   
   # removing burn in and outputting samples from joint
