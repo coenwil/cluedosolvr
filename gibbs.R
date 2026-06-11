@@ -23,6 +23,7 @@ computeLH <- function(event, envelope, prior) {
     # if the observed suggestion set is exactly the simulated set, 
     # the likelihood of nonrefutation is 1
     if (length(C) == 0) return(1)
+    
     # initialize likelihood value
     lh <- 1
     # cycle through players in refutation order
@@ -53,5 +54,78 @@ computeLH <- function(event, envelope, prior) {
                                  prob.C[1]*prob.C[2] - prob.C[1]*prob.C[3] - prob.C[2]* prob.C[3])
                                  + prob.C[1]*prob.C[2]*prob.C[3]
   }
-  return(lh)
 }
+
+# gibbs sampler
+gibbs <- function(state, solver.name, n.iter = 1000, burn = 200) {
+  prior <- state$players[[solver.name]]$prior
+  history <- state$history
+  
+  # using log likelihoods so i can sum
+  logLH <- function(envelope) {
+    # init value
+    llh <- 0
+    # compute likelihood for every event
+    for (event in history) {
+      lh <- computeLH(event, envelope, prior)
+      llh <- llh + log(lh)
+    }
+    llh
+  }
+  # initial cards are sampled from marginal posteriors
+  samp.s <- sample(characters, 1, prob = prior[characters, "envelope"])
+  samp.w <- sample(weapons, 1, prob = prior[weapons, "envelope"])
+  samp.r <- sample(rooms, 1, prob = prior[rooms, "envelope"])
+  
+  # creating an outcome vector of lists of most likely solution sets
+  samples <- vector("list", n.iter) 
+  
+  # gibbs sampling loop
+  for (h in 1:n.iter) {
+    
+    # sample suspect conditional on weapon and room
+    cond.envelope <- c(samp.w, samp.r)
+    # log conditional posterior of suspect
+    log.condpost <- sapply(characters, function(s) {
+      # creating the simulated solution set, loop over all 6
+      envelope <- c(s, cond.envelope)
+      # addition is logged multiplication
+      logLH(envelope) + log(prior[s, "envelope"])
+    })
+    # sample new suspect with probability equal to conditional posterior
+    samp.s <- sample(characters, 1, prob = exp(log.condpost))
+    
+    # sample weapon given suspect and room
+    cond.envelope <- c(samp.s, samp.r)
+    log.condpost <- sapply(weapons, function(w) {
+      envelope <- c(samp.s, w, samp.r)
+      logLH(envelope) + log(prior[s, "envelope"])
+    })
+    # sample new weapon for next iteration
+    samp.w <- sample(weapons, 1, prob = exp(log.condpost))
+    
+    # sample room given suspect and weapon
+    cond.envelope <- c(samp.s, samp.w)
+    log.condpost <- sapply(rooms, function(r) {
+      envelope <- c(samp.s, samp.w, r)
+      logLH(envelope) + log(prior[r, "envelope"])
+    })
+    # sample new room
+    samp.r <- sample(rooms, 1, prob = exp(log.condpost))
+    
+    # one sample of a full solution set goes into the outcome vector
+    samples[[t]] <- c(samp.s, samp.w, samp.r)
+  }
+  
+  # removing burn in and outputting samples from joint
+  samples[(burn + 1):n.iter]
+}
+
+
+
+
+
+
+
+
+
