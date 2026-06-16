@@ -123,6 +123,27 @@ updatePrior <- function(state, event, solver.name, opponents) {
     }
   }
   
+  # if the probability of a card being in one players hand increases, the probability of it being in another hand should decrease
+  # do that by rescaling so the player hand probabilities + envelope probability adds to 1
+  # only needs to happen if there was a refutation
+  if (!is.null(event$refuter)) {
+    
+    for (card in rownames(prior)) {
+      other.players <- setdiff(names(state$players), event$refuter)
+      # the probability of the card being in the hands of all players except the refuter
+      hands.prob <- 1 - prior[card, "envelope"] - prior[card, event$refuter]
+      others.prob <- sum(prior[card, other.players])
+    # checking if the envelope for this card does not have probability 1
+    if (others.prob > 0) {
+      # the idea is that the probability of the card being in non-refuter hands must be reduced
+      # since the probability of it being in the refuters hand gets increased. 
+      # this is done by distributing the remaining probability equally across the other players
+      # which makes sure each row of card probabilities always stays 1
+      prior[card, other.players] <- prior[card, other.players] * (hands.prob / others.prob)
+      }
+    }
+  }
+  
   # check if now there is a card certainly in the envelope from a category, if yes make all others 0
   for (category in list(characters, weapons, rooms)) {
     envelope.probs <- prior[category, "envelope"]
